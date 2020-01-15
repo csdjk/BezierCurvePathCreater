@@ -1,0 +1,19 @@
+{
+  "name": "bezier",
+  "version": "0.0.1",
+  "description": "The package template for getting started.",
+  "author": "Cocos Creator",
+  "main": "main.js",
+  "main-menu": {
+    "bezier/open": {
+      "message": "bezier:open"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "fixed-size",
+    "title": "bezier",
+    "width": 400,
+    "height": 300
+  }
+}
