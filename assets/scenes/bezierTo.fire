@@ -2089,7 +2089,7 @@
     "target": {
       "__id__": 2
     },
-    "component": "myBezier",
+    "component": "drawBezier",
     "handler": "setRunTime",
     "customEventData": ""
   },
