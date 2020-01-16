@@ -423,8 +423,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -962,
-      "y": 385
+      "x": -923,
+      "y": 500
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -716,7 +716,7 @@
     "target": {
       "__id__": 2
     },
-    "component": "myBezier",
+    "component": "drawBezier",
     "handler": "hideInfoWindow",
     "customEventData": ""
   },
