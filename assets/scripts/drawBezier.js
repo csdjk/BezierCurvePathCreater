@@ -6,6 +6,8 @@ const Ident = {
     window: 2
 }
 
+let PointNum = 0;
+
 cc.Class({
     extends: cc.Component,
     // editor: {
@@ -205,19 +207,27 @@ cc.Class({
     // 创建新节点
     createPoint(ident, pos) {
         let node;
+        let name;
         if (ident == Ident.point) {
             node = cc.instantiate(this.point);
             node.ident = Ident.point;
-            node.name = "point";
+            name = "point";
         } else if (ident == Ident.control) {
             node = cc.instantiate(this.control);
             node.ident = Ident.control;
-            node.name = "control";
+            name = "control";
             this.moveTargetNode = node;
         }
+        let count = PointNum++;
+        node.name = name + "_" + count;
         node.parent = this.node;
         node.setPosition(pos);
         this.addTouchEvents(node);
+        // 创建编号
+        let num = new cc.Node();
+        num.parent = node;
+        num.y = 20
+        num.addComponent(cc.Label).string = count
         return node
     },
 
@@ -238,6 +248,8 @@ cc.Class({
     },
 
     // 存储到曲线字典
+    // key - 点, value - 该点所关联的曲线对象Obj, 
+    // 曲线对象Obj: start字段 为 该点作为起点所在的曲线,  control end类似
     saveToPointCurveDict(curve) {
         let obj;
         for (const key in curve) {
@@ -247,7 +259,7 @@ cc.Class({
             } else {
                 obj = {};
             }
-            obj[key] = curve;
+            obj[key + "Curve"] = curve;
             this.pointCurveDict.set(point, obj);
         }
         console.log("pointCurveDict", this.pointCurveDict);
@@ -279,13 +291,13 @@ cc.Class({
     getPointLocation(node) {
         let curveObj = this.pointCurveDict.get(node);
         if (curveObj) {
-            if (curveObj["start"] && curveObj["end"]) {
+            if (curveObj["startCurve"] && curveObj["endCurve"]) {
                 return "center";
             }
-            if (curveObj["start"]) {
+            if (curveObj["startCurve"]) {
                 return "start";
             }
-            if (curveObj["end"]) {
+            if (curveObj["endCurve"]) {
                 return "end";
             }
         }
@@ -311,13 +323,14 @@ cc.Class({
         if (this.pointCurveDict.has(point)) {
             //中间点有前后两个曲线,删除该点就需要合并两个曲线
             let CurveObj = this.pointCurveDict.get(point);
-            let prevCurve = CurveObj.end;
-            let nextCurve = CurveObj.start;
+            let prevCurve = CurveObj.endCurve;
+            let nextCurve = CurveObj.startCurve;
             // 把前一个曲线的终点移动到后一个曲线的终点上
             prevCurve.end = nextCurve.end;
-            CurveObj.end = prevCurve;
-            CurveObj.start = null;
-            this.pointCurveDict.set(prevCurve.end, CurveObj);
+            // 重新赋值该节点下的曲线对象的end曲线
+            let prevEndCurveObj = this.pointCurveDict.get(prevCurve.end);
+            prevEndCurveObj.endCurve = prevCurve;
+            this.pointCurveDict.delete(point);
             // 删除后曲线相关的信息
             this.pointCurveDict.delete(nextCurve.start)
             this.pointCurveDict.delete(nextCurve.control)
@@ -327,7 +340,7 @@ cc.Class({
                 const curve = this.bezierLists[i];
                 if (nextCurve === curve) {
                     this.bezierLists.splice(i, 1);
-                    return
+                    return;
                 }
             }
         }
@@ -337,9 +350,13 @@ cc.Class({
         console.warn("删除的是起点");
 
         if (this.pointCurveDict.has(point)) {
+            //找到该点关联的曲线
             let CurveObj = this.pointCurveDict.get(point);
-            let startCurve = CurveObj.start;
-            CurveObj.end = null;
+            let startCurve = CurveObj.startCurve;
+            CurveObj.endCurve = null;
+            // 删除与曲线终点 关联 的曲线对象, 即删除start曲线
+            let endCurveObj = this.pointCurveDict.get(startCurve.end);
+            endCurveObj.endCurve = null;
             // 删除曲线
             this.pointCurveDict.delete(startCurve.start)
             this.pointCurveDict.delete(startCurve.control)
@@ -360,8 +377,11 @@ cc.Class({
 
         if (this.pointCurveDict.has(point)) {
             let CurveObj = this.pointCurveDict.get(point);
-            let endCurve = CurveObj.end;
-            CurveObj.start = null;
+            let endCurve = CurveObj.endCurve;
+            CurveObj.startCurve = null;
+            // 删除与曲线起点 关联 的曲线对象, 即删除end曲线
+            let startCurveObj = this.pointCurveDict.get(endCurve.start);
+            startCurveObj.startCurve = null;
             // 删除曲线
             this.pointCurveDict.delete(endCurve.end)
             this.pointCurveDict.delete(endCurve.control)
