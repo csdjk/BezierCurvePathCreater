@@ -19,8 +19,8 @@ cc.Class({
         box: cc.Node,
         point: cc.Prefab,//坐标点
         control: cc.Prefab,//控制点
-        bezierColor: cc.hexToColor('#03A8F3'),// 贝塞尔曲线颜色
-        lineColor: cc.hexToColor('#e81e63'),//控制线段
+        bezierColor: cc.Color(255, 0, 0),// 贝塞尔曲线颜色
+        lineColor: cc.Color(0, 255, 255),//控制线段
         infoWindow: cc.Node,
         runTime: cc.EditBox,
         msg: cc.Node,
@@ -138,68 +138,72 @@ cc.Class({
 
     // 添加节点事件
     addTouchEvents(node) {
-        let _this = this;
+        let target;
         // 鼠标按下
-        node.on(cc.Node.EventType.MOUSE_DOWN, function (event) {
+        node.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
             event.stopPropagation();
+            target = event.target;
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
-            let mousePos = _this.convertToNodeSpace(event);
+            let mousePos = this.convertToNodeSpace(event);
             console.log(mousePos)
 
             // 鼠标右键
             if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
-                if (_this.isDelete(this)) {
-                    _this.deleteTarget = this;
-                    _this.showDeleteBtn(mousePos);
+                if (this.isDelete(target)) {
+                    this.deleteTarget = target;
+                    this.showDeleteBtn(mousePos);
                 }
-                console.log(this)
+                console.log(target)
                 return
             }
 
-            if (!_this.isOperate()) {
-                console.log(this)
+            if (!this.isOperate()) {
+                console.log(target)
                 return
             }
             // 可以移动的节点
-            if (_this.isMove(this)) {
+            if (this.isMove(target)) {
                 //指定需要移动的目标节点
-                _this.moveTargetNode = this;
+                this.moveTargetNode = target;
             }
             // 空白地方才创建新的
-            if (!_this.isMove(this) && !_this.moveTargetNode) {
+            if (!this.isMove(target) && !this.moveTargetNode) {
                 //创建新的节点
-                _this.createCurve(mousePos);
+                this.createCurve(mousePos);
             }
-            _this.isMouseDown = true;
+            this.isMouseDown = true;
         });
         // 鼠标移动
-        node.on(cc.Node.EventType.MOUSE_MOVE, function (event) {
+        node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
+            target = event.target;
             //如果是目标节点
-            if (_this.isMove(this)) {
-                this.opacity = 100;
-                cc._canvas.style.cursor = "all-scroll"
+            if (this.isMove(target)) {
+                target.opacity = 100;
+                cc.game.canvas.style.cursor = "all-scroll"
             }
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
-            let mousePos = _this.convertToNodeSpace(event);
+            let mousePos = this.convertToNodeSpace(event);
             //鼠标按下并且有指定目标节点
-            if (_this.isMouseDown && _this.moveTargetNode) {
-                _this.moveTargetNode.setPosition(mousePos);
+            if (this.isMouseDown && this.moveTargetNode) {
+                this.moveTargetNode.setPosition(mousePos);
             }
         });
         // 鼠标离开
-        node.on(cc.Node.EventType.MOUSE_LEAVE, function (event) {
+        node.on(cc.Node.EventType.MOUSE_LEAVE, (event) => {
+            target = event.target;
             //如果是目标节点
-            if (_this.isMove(this)) {
-                this.opacity = 255;
-                cc._canvas.style.cursor = "auto"
+            if (this.isMove(target)) {
+                target.opacity = 255;
+                cc.game.canvas.style.cursor = "auto"
             }
         });
         // 鼠标抬起
-        node.on(cc.Node.EventType.MOUSE_UP, function (event) {
-            _this.isMouseDown = false;
-            _this.moveTargetNode = null;
-            if (_this.isMove(this)) {
-                _this.saveBezierPath();//保存坐标点
+        node.on(cc.Node.EventType.MOUSE_UP, (event) => {
+            target = event.target;
+            this.isMouseDown = false;
+            this.moveTargetNode = null;
+            if (this.isMove(target)) {
+                this.saveBezierPath();//保存坐标点
             }
         });
     },

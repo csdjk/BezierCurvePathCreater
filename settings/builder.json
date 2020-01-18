@@ -27,7 +27,7 @@
   },
   "renderMode": "2",
   "startScene": "37f07a3b-b7a6-43db-88bd-f3113c5cc040",
-  "title": "openSdkDemo",
+  "title": "BezierCurvePathCreater",
   "webOrientation": "auto",
   "wechatgame": {
     "REMOTE_SERVER_ROOT": "",
@@ -37,5 +37,25 @@
     "subContext": ""
   },
   "xxteaKey": "a35e4c4b-5227-4c",
-  "zipCompressJs": true
+  "zipCompressJs": true,
+  "android": {
+    "packageName": "org.cocos2d.openSdkDemo"
+  },
+  "ios": {
+    "packageName": "org.cocos2d.openSdkDemo"
+  },
+  "mac": {
+    "packageName": "org.cocos2d.openSdkDemo"
+  },
+  "win32": {},
+  "android-instant": {
+    "REMOTE_SERVER_ROOT": "",
+    "host": "",
+    "packageName": "org.cocos2d.openSdkDemo",
+    "pathPattern": "",
+    "recordPath": "",
+    "scheme": "https",
+    "skipRecord": false
+  },
+  "appBundle": false
 }
