@@ -24,8 +24,9 @@ cc.Class({
         infoWindow: cc.Node,
         runTime: cc.EditBox,
         msg: cc.Node,
-        timeInfo: cc.Label,
+        timeInfo: cc.Label,//实时运行时间
         deleteBtn: cc.Node,//删除按钮
+        mouseLocation:cc.Label,//鼠标坐标
     },
 
     onLoad() {
@@ -183,6 +184,7 @@ cc.Class({
             }
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
             let mousePos = this.convertToNodeSpace(event);
+            this.setMouseLocation(mousePos);
             //鼠标按下并且有指定目标节点
             if (this.isMouseDown && this.moveTargetNode) {
                 this.moveTargetNode.setPosition(mousePos);
@@ -207,7 +209,7 @@ cc.Class({
             }
         });
     },
-
+    
     // 创建新节点
     createPoint(ident, pos) {
         let node;
@@ -573,6 +575,9 @@ cc.Class({
     hideDeleteBtn() {
         this.deleteBtn.active = false;
     },
-
-
+    //显示鼠标坐标
+    setMouseLocation(pos){
+        this.mouseLocation.node.setPosition(pos);
+        this.mouseLocation.string = `x:${pos.x} y:${pos.y}`;
+    }
 });
