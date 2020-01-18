@@ -26,7 +26,7 @@ cc.Class({
         msg: cc.Node,
         timeInfo: cc.Label,//实时运行时间
         deleteBtn: cc.Node,//删除按钮
-        mouseLocation:cc.Label,//鼠标坐标
+        mouseLocation: cc.Label,//鼠标坐标
     },
 
     onLoad() {
@@ -96,7 +96,8 @@ cc.Class({
     },
     // 
     initNodeEvents() {
-        this.addTouchEvents(this.node);
+        // this.addTouchEvents(this.node);
+        this.addCanvasTouchEvents()
         // 可移动的窗体
         // this.inputNode.ident = Ident.window;
         // this.addTouchEvents(this.inputNode);
@@ -146,18 +147,14 @@ cc.Class({
             target = event.target;
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
             let mousePos = this.convertToNodeSpace(event);
-            console.log(mousePos)
-
             // 鼠标右键
             if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
                 if (this.isDelete(target)) {
                     this.deleteTarget = target;
                     this.showDeleteBtn(mousePos);
                 }
-                console.log(target)
                 return
             }
-
             if (!this.isOperate()) {
                 console.log(target)
                 return
@@ -167,21 +164,13 @@ cc.Class({
                 //指定需要移动的目标节点
                 this.moveTargetNode = target;
             }
-            // 空白地方才创建新的
-            if (!this.isMove(target) && !this.moveTargetNode) {
-                //创建新的节点
-                this.createCurve(mousePos);
-            }
             this.isMouseDown = true;
         });
         // 鼠标移动
         node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
             target = event.target;
-            //如果是目标节点
-            if (this.isMove(target)) {
-                target.opacity = 100;
-                cc.game.canvas.style.cursor = "all-scroll"
-            }
+            target.opacity = 100;
+            cc.game.canvas.style.cursor = "all-scroll"
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
             let mousePos = this.convertToNodeSpace(event);
             this.setMouseLocation(mousePos);
@@ -193,14 +182,51 @@ cc.Class({
         // 鼠标离开
         node.on(cc.Node.EventType.MOUSE_LEAVE, (event) => {
             target = event.target;
-            //如果是目标节点
-            if (this.isMove(target)) {
-                target.opacity = 255;
-                cc.game.canvas.style.cursor = "auto"
-            }
+            target.opacity = 255;
+            cc.game.canvas.style.cursor = "auto"
         });
         // 鼠标抬起
         node.on(cc.Node.EventType.MOUSE_UP, (event) => {
+            target = event.target;
+            this.isMouseDown = false;
+            this.moveTargetNode = null;
+            this.saveBezierPath();//保存坐标点
+        });
+    },
+
+    // 添加Canvas节点事件
+    addCanvasTouchEvents(node) {
+        let target;
+        // 鼠标按下
+        this.node.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
+            event.stopPropagation();
+            target = event.target;
+            //创建坐标点,需要先把屏幕坐标转换到节点坐标下
+            let mousePos = this.convertToNodeSpace(event);
+            // 鼠标右键
+            if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
+                return
+            }
+            if (!this.isOperate()) {
+                console.log(target)
+                return
+            }
+            this.createCurve(mousePos);
+            this.isMouseDown = true;
+        });
+        // 鼠标移动
+        this.node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
+            target = event.target;
+            //创建坐标点,需要先把屏幕坐标转换到节点坐标下
+            let mousePos = this.convertToNodeSpace(event);
+            this.setMouseLocation(mousePos);
+            //鼠标按下并且有指定目标节点
+            if (this.isMouseDown && this.moveTargetNode) {
+                this.moveTargetNode.setPosition(mousePos);
+            }
+        });
+        // 鼠标抬起
+        this.node.on(cc.Node.EventType.MOUSE_UP, (event) => {
             target = event.target;
             this.isMouseDown = false;
             this.moveTargetNode = null;
@@ -209,7 +235,7 @@ cc.Class({
             }
         });
     },
-    
+
     // 创建新节点
     createPoint(ident, pos) {
         let node;
@@ -576,7 +602,7 @@ cc.Class({
         this.deleteBtn.active = false;
     },
     //显示鼠标坐标
-    setMouseLocation(pos){
+    setMouseLocation(pos) {
         this.mouseLocation.node.setPosition(pos);
         this.mouseLocation.string = `x:${pos.x} y:${pos.y}`;
     }
