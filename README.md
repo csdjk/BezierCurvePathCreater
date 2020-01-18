@@ -1,6 +1,8 @@
 # BezierCurvePathCreater
 用于创建贝塞尔曲线路径，可匀速运动 - Used to create a Bezier curve path with uniform motion
 
+**该工程基于cocos creator 2.2.2版本!**
+
 
 [在线演示地址](https://csdjk.github.io/bezierPathCreater.github.io/)(可以直接在上面规划好后导出json文件)
 
