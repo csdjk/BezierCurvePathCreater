@@ -19,8 +19,8 @@ cc.Class({
         box: cc.Node,
         point: cc.Prefab,//坐标点
         control: cc.Prefab,//控制点
-        bezierColor: cc.Color(255, 0, 0),// 贝塞尔曲线颜色
-        lineColor: cc.Color(0, 255, 255),//控制线段
+        bezierColor: new cc.Color(255, 0, 0),// 贝塞尔曲线颜色
+        lineColor: new cc.Color(0, 255, 255),//控制线段
         infoWindow: cc.Node,
         runTime: cc.EditBox,
         msg: cc.Node,
@@ -50,7 +50,7 @@ cc.Class({
         this.infoWindow.zIndex = 10;
         this.notice = this.infoWindow.getChildByName("notice").getComponent(cc.Label);
         this.fileInputBox = this.infoWindow.getChildByName("Input").getChildByName("fileEditBox").getComponent(cc.EditBox);
-        this.inputNode = this.node.getChildByName("Input");
+        this.moveBtn = this.node.getChildByName("Input").getChildByName("moveBtn");
         this.initGraphics();
         this.initRandCurve()
         this.initNodeEvents();
@@ -64,12 +64,6 @@ cc.Class({
         if (this.isStartRun) {
             this.setCountTimeLabel(dt);
         }
-        // let pos = this.getRandPos()
-        // if (pos.x < -960) {
-        //     console.error(pos)
-        //     this.box.setPosition(pos)
-        // }
-        // console.log(this.getRandPos());
     },
     // 初始化Graphics
     initGraphics() {
@@ -96,11 +90,13 @@ cc.Class({
     },
     // 
     initNodeEvents() {
-        // this.addTouchEvents(this.node);
-        this.addCanvasTouchEvents()
+        this.addCanvasTouchEvents();
+        // 
+        this.addDragEvents(this.box)
         // 可移动的窗体
+        this.addDragEvents(this.moveBtn, this.moveBtn.parent);
+        this.addHideEvents(this.moveBtn.parent)
         // this.inputNode.ident = Ident.window;
-        // this.addTouchEvents(this.inputNode);
     },
 
     // 绘制路线
@@ -138,58 +134,66 @@ cc.Class({
         return node.ident == Ident.point;
     },
 
-    // 添加节点事件
-    addTouchEvents(node) {
-        let target;
+
+    addHideEvents(node){
+        node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
+            this.hideMouseLocation()
+        })
+    },
+    // 添加拖拽事件
+    addDragEvents(node, target = node) {
+        // let target;
         // 鼠标按下
         node.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
             event.stopPropagation();
-            target = event.target;
-            //创建坐标点,需要先把屏幕坐标转换到节点坐标下
-            let mousePos = this.convertToNodeSpace(event);
+            // target = event.target;
             // 鼠标右键
-            if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
-                if (this.isDelete(target)) {
-                    this.deleteTarget = target;
-                    this.showDeleteBtn(mousePos);
-                }
-                return
-            }
-            if (!this.isOperate()) {
-                console.log(target)
-                return
-            }
-            // 可以移动的节点
-            if (this.isMove(target)) {
-                //指定需要移动的目标节点
+            if (event.getButton() == cc.Event.EventMouse.BUTTON_LEFT && this.isOperate()) {
                 this.moveTargetNode = target;
+                this.isMouseDown = true;
             }
-            this.isMouseDown = true;
         });
         // 鼠标移动
         node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
-            target = event.target;
+            // target = event.target;
             target.opacity = 100;
             cc.game.canvas.style.cursor = "all-scroll"
-            //创建坐标点,需要先把屏幕坐标转换到节点坐标下
-            let mousePos = this.convertToNodeSpace(event);
-            this.setMouseLocation(mousePos);
             //鼠标按下并且有指定目标节点
             if (this.isMouseDown && this.moveTargetNode) {
+                //把屏幕坐标转换到节点坐标下
+                let mousePos = this.convertToNodeSpace(event);
                 this.moveTargetNode.setPosition(mousePos);
             }
         });
         // 鼠标离开
         node.on(cc.Node.EventType.MOUSE_LEAVE, (event) => {
-            target = event.target;
+            // target = event.target;
             target.opacity = 255;
             cc.game.canvas.style.cursor = "auto"
         });
         // 鼠标抬起
         node.on(cc.Node.EventType.MOUSE_UP, (event) => {
-            target = event.target;
             this.isMouseDown = false;
             this.moveTargetNode = null;
+        });
+    },
+
+    // 添加节点的删除事件
+    addPointDeleteEvents(node) {
+        // 鼠标按下
+        node.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
+            // 鼠标右键
+            if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
+                if (this.isDelete(event.target)) {
+                    let mousePos = this.convertToNodeSpace(event);
+                    this.deleteTarget = event.target;
+                    this.showDeleteBtn(mousePos);
+                }
+                return
+            }
+        });
+        // 鼠标抬起
+        node.on(cc.Node.EventType.MOUSE_UP, () => {
             this.saveBezierPath();//保存坐标点
         });
     },
@@ -199,20 +203,19 @@ cc.Class({
         let target;
         // 鼠标按下
         this.node.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
-            event.stopPropagation();
-            target = event.target;
-            //创建坐标点,需要先把屏幕坐标转换到节点坐标下
-            let mousePos = this.convertToNodeSpace(event);
-            // 鼠标右键
-            if (event.getButton() == cc.Event.EventMouse.BUTTON_RIGHT) {
-                return
+            // 鼠标左键
+            if (event.getButton() == cc.Event.EventMouse.BUTTON_LEFT) {
+                event.stopPropagation();
+                target = event.target;
+                //创建坐标点,需要先把屏幕坐标转换到节点坐标下
+                let mousePos = this.convertToNodeSpace(event);
+                if (!this.isOperate()) {
+                    console.log(target)
+                    return
+                }
+                this.createCurve(mousePos);
+                this.isMouseDown = true;
             }
-            if (!this.isOperate()) {
-                console.log(target)
-                return
-            }
-            this.createCurve(mousePos);
-            this.isMouseDown = true;
         });
         // 鼠标移动
         this.node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
@@ -254,7 +257,8 @@ cc.Class({
         node.name = name + "_" + count;
         node.parent = this.node;
         node.setPosition(pos);
-        this.addTouchEvents(node);
+        this.addPointDeleteEvents(node);
+        this.addDragEvents(node)
         // 创建编号
         let num = new cc.Node();
         num.parent = node;
@@ -368,13 +372,7 @@ cc.Class({
             this.pointCurveDict.delete(nextCurve.control)
             nextCurve.start.destroy();
             nextCurve.control.destroy();
-            for (var i = 0, len = this.bezierLists.length; i < len; i++) {
-                const curve = this.bezierLists[i];
-                if (nextCurve === curve) {
-                    this.bezierLists.splice(i, 1);
-                    return;
-                }
-            }
+            this.deleteCurveFromBezierLists(nextCurve);
         }
     },
     // 删除的是起点
@@ -394,19 +392,12 @@ cc.Class({
             this.pointCurveDict.delete(startCurve.control)
             startCurve.start.destroy();
             startCurve.control.destroy();
-            for (var i = 0, len = this.bezierLists.length; i < len; i++) {
-                const curve = this.bezierLists[i];
-                if (startCurve === curve) {
-                    this.bezierLists.splice(i, 1);
-                    return
-                }
-            }
+            this.deleteCurveFromBezierLists(startCurve);
         }
     },
     // 删除的是终点
     deleteEndPoint(point) {
         console.warn("删除的是终点");
-
         if (this.pointCurveDict.has(point)) {
             let CurveObj = this.pointCurveDict.get(point);
             let endCurve = CurveObj.endCurve;
@@ -419,12 +410,17 @@ cc.Class({
             this.pointCurveDict.delete(endCurve.control)
             endCurve.end.destroy();
             endCurve.control.destroy();
-            for (var i = 0, len = this.bezierLists.length; i < len; i++) {
-                const curve = this.bezierLists[i];
-                if (endCurve === curve) {
-                    this.bezierLists.splice(i, 1);
-                    return
-                }
+            this.deleteCurveFromBezierLists(endCurve);
+        }
+    },
+
+    //从曲线列表删除曲线
+    deleteCurveFromBezierLists(curve) {
+        for (var i = 0, len = this.bezierLists.length; i < len; i++) {
+            const _curve = this.bezierLists[i];
+            if (_curve === curve) {
+                this.bezierLists.splice(i, 1);
+                return
             }
         }
     },
@@ -490,6 +486,7 @@ cc.Class({
             downloadLink.click();
         }
     },
+    // 
     computeBezierActions() {
         this.actionLists = [];
         // 创建动作队列
@@ -524,7 +521,7 @@ cc.Class({
             this.box.runAction(...this.actionLists);
         }
     },
-
+    // 校验运行时间的输入格式
     checkRunTimeInputBox() {
         if (this.runTime.string == "" || isNaN(Number(this.runTime.string))) {
             return false
@@ -576,6 +573,7 @@ cc.Class({
         this.timeInfo.string = 0;
         this.currentRunTime = 0;
     },
+    // 停止计时
     stopCountTime() {
         this.isStartRun = false;
     },
@@ -603,7 +601,12 @@ cc.Class({
     },
     //显示鼠标坐标
     setMouseLocation(pos) {
+        this.mouseLocation.node.active = true
         this.mouseLocation.node.setPosition(pos);
         this.mouseLocation.string = `x:${pos.x} y:${pos.y}`;
+    },
+    //隐藏
+    hideMouseLocation(){
+        this.mouseLocation.node.active = false
     }
 });
