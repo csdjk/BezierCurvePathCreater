@@ -135,7 +135,7 @@ cc.Class({
     },
 
 
-    addHideEvents(node){
+    addHideEvents(node) {
         node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
             this.hideMouseLocation()
         })
@@ -606,7 +606,7 @@ cc.Class({
         this.mouseLocation.string = `x:${pos.x} y:${pos.y}`;
     },
     //隐藏
-    hideMouseLocation(){
+    hideMouseLocation() {
         this.mouseLocation.node.active = false
     }
 });
