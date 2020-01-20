@@ -27,3 +27,7 @@
 **如果你们有什么好的建议，或者发现了bug可以[到这里](https://blog.csdn.net/qq_28299311/article/details/104009804)留言告诉我，我会尽力去完善它。**
 <font color="red">
 **如果觉得好用的朋友希望能点个赞，关注一下哟，你们的每一个star都是对我最大的鼓励和动力!**
+
+### 该项目是我业余时间弄出来的,如果对你们有所帮助的话可以小小的支持一下我哟! 我也会更加的有动力持续更新下去...
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200119224220592.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI4Mjk5MzEx,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200119224225316.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI4Mjk5MzEx,size_16,color_FFFFFF,t_70)
