@@ -1,6 +1,13 @@
 # BezierCurvePathCreater
 用于创建贝塞尔曲线路径，可匀速运动 - Used to create a Bezier curve path with uniform motion
 
+## 更新日志：
+### 2020.2.7：
+- 新添加三阶贝塞尔曲线
+- 平滑度自定义
+
+----
+
 **该工程基于cocos creator 2.2.2版本!**
 
 

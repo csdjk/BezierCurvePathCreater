@@ -1,4 +1,4 @@
-let BezierMaker = require("BezierMaker")
+let Bezier = require("Bezier")
 
 let BezierData = (function () {
     let _this = {};
@@ -25,15 +25,21 @@ let BezierData = (function () {
     // 父节点
     let pointParent = null;
     // 曲线类型
-    let currentBezierType = 3;
+    let currentBezierType = 2;
+    // 每段曲线的切割份数
+    let pointCount = 100;
 
-    // ------------------------【共有方法】---------------------------
+    // ------------------------【公有方法】---------------------------
     // 初始化
     _this.init = function (point, control, parent) {
         pointPrefab = point;
         controlPrefab = control;
         pointParent = parent;
         initRandCurve();
+    }
+    // 设置曲线切割份数
+    _this.setPointCount = function (num) {
+        pointCount = num;
     }
     // 设置曲线类型
     _this.setBezierCurveType = function (type) {
@@ -144,12 +150,14 @@ let BezierData = (function () {
             const bezier = bezierCurveLists[i];
             // 创建一个贝塞尔曲线
             // let bezierCurve = new Bezier(bezier.start, bezier.control, bezier.end, 100);
-            console.log("consscscds", Object.values(bezier));
+            // console.log("consscscds", Object.values(bezier));
 
-            let bezierCurve = new BezierMaker(Object.values(bezier), 100);
+            let bezierCurve = new Bezier(Object.values(bezier), 2);
 
             // 获取曲线点
-            let points = bezierCurve.getPoints(100);
+            let points = bezierCurve.getPoints(pointCount);
+            console.log("consscscds",pointCount);
+
             // 获取曲线长度
             let curveLength = bezierCurve.getCurveLength();
             // 计算路程长度
@@ -232,7 +240,7 @@ let BezierData = (function () {
         console.warn("删除的是中间点");
 
         if (pointCurveDict.has(point)) {
-            //中间点有前后两个曲线,删除该点就需要合并两个曲线
+            //中间点有前后两个曲线,删除该点就需要合并两个曲线（这里的方案是保留前面的曲线，删除后面的曲线）
             let CurveObj = pointCurveDict.get(point);
             let prevCurve = CurveObj.endCurve;
             let nextCurve = CurveObj.startCurve;
@@ -243,10 +251,16 @@ let BezierData = (function () {
             prevEndCurveObj.endCurve = prevCurve;
             pointCurveDict.delete(point);
             // 删除后曲线相关的信息
-            pointCurveDict.delete(nextCurve.start)
-            pointCurveDict.delete(nextCurve.control)
-            nextCurve.start.destroy();
-            nextCurve.control.destroy();
+            for (const key in nextCurve) {
+                if(key == "end") continue;
+                const _point = nextCurve[key];
+                pointCurveDict.delete(_point)
+                _point.destroy();
+            }
+            // pointCurveDict.delete(nextCurve.start)
+            // pointCurveDict.delete(nextCurve.control)
+            // nextCurve.start.destroy();
+            // nextCurve.control.destroy();
             deleteCurveFromBezierLists(nextCurve);
         }
     }
@@ -259,14 +273,15 @@ let BezierData = (function () {
             let CurveObj = pointCurveDict.get(point);
             let startCurve = CurveObj.startCurve;
             CurveObj.endCurve = null;
-            // 删除与曲线终点 关联 的曲线对象, 即删除start曲线
+            // 删除曲线及其相关的点
             let endCurveObj = pointCurveDict.get(startCurve.end);
             endCurveObj.endCurve = null;
-            // 删除曲线
-            pointCurveDict.delete(startCurve.start)
-            pointCurveDict.delete(startCurve.control)
-            startCurve.start.destroy();
-            startCurve.control.destroy();
+            for (const key in startCurve) {
+                if(key == "end") continue;
+                const _point = startCurve[key];
+                pointCurveDict.delete(_point)
+                _point.destroy();
+            }
             deleteCurveFromBezierLists(startCurve);
         }
     }
@@ -277,14 +292,17 @@ let BezierData = (function () {
             let CurveObj = pointCurveDict.get(point);
             let endCurve = CurveObj.endCurve;
             CurveObj.startCurve = null;
-            // 删除与曲线起点 关联 的曲线对象, 即删除end曲线
+            // 删除曲线及其相关的点
             let startCurveObj = pointCurveDict.get(endCurve.start);
             startCurveObj.startCurve = null;
-            // 删除曲线
-            pointCurveDict.delete(endCurve.end)
-            pointCurveDict.delete(endCurve.control)
-            endCurve.end.destroy();
-            endCurve.control.destroy();
+            for (const key in endCurve) {
+                if(key == "start") continue;
+                const _point = endCurve[key];
+                pointCurveDict.delete(_point)
+                _point.destroy();
+            }
+            // pointCurveDict.delete(endCurve.control)
+            // endCurve.control.destroy();
             deleteCurveFromBezierLists(endCurve);
         }
     }
