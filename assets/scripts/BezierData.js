@@ -29,14 +29,34 @@ let BezierData = (function () {
     // 每段曲线的切割份数
     let pointCount = 100;
 
+    // 画板分辨率
+    let resolution = {
+        width: 1920,
+        height: 1080
+    }
+
+
     // ------------------------【公有方法】---------------------------
+
+
     // 初始化
     _this.init = function (point, control, parent) {
+        this.clearAllBezier()
         pointPrefab = point;
         controlPrefab = control;
         pointParent = parent;
         initRandCurve();
     }
+    // 获取分辨率
+    _this.getResolution = function (params) {
+        return resolution;
+    }
+    // 设置分辨率
+    _this.setResolution = function (width, height) {
+        resolution = { width, height };
+        return resolution;
+    }
+
     // 设置曲线切割份数
     _this.setPointCount = function (num) {
         pointCount = num;
@@ -69,6 +89,7 @@ let BezierData = (function () {
         return bezierCurveData;
     }
 
+
     // 设置贝塞尔曲线运行时长
     _this.setBezierCurveRunTime = function (time) {
         bezierCurveData.time = time;
@@ -99,8 +120,8 @@ let BezierData = (function () {
         let control2 = createPoint(lcl.Ident.control, pos);
         //计算偏移点
         let c1pos = cc.v2(200, 200).add(start.position);
-        c1pos.x = Math.min(960, c1pos.x);
-        c1pos.y = Math.min(540, c1pos.y);
+        c1pos.x = Math.min(resolution.width/2, c1pos.x);
+        c1pos.y = Math.min(resolution.height/2, c1pos.y);
         let control1 = createPoint(lcl.Ident.control, c1pos, false);
 
         let curve = { start, control1, control2, end }
@@ -156,7 +177,7 @@ let BezierData = (function () {
 
             // 获取曲线点
             let points = bezierCurve.getPoints(pointCount);
-            console.log("consscscds",pointCount);
+            console.log("consscscds", pointCount);
 
             // 获取曲线长度
             let curveLength = bezierCurve.getCurveLength();
@@ -168,6 +189,18 @@ let BezierData = (function () {
         }
         console.log("保存路径bezierCurveData", bezierCurveData);
         console.log("保存路径pointCurveDict->", pointCurveDict)
+    }
+
+    // 情况所有曲线
+    _this.clearAllBezier = function () {
+        console.log("clearAllBezier");
+
+        bezierCurveLists = [];
+        pointCurveDict.forEach((curve,point) => {
+            if (point)
+                point.destroy();
+        })
+        pointCurveDict.clear()
     }
 
     // ------------------------【私有方法】---------------------------
@@ -196,15 +229,14 @@ let BezierData = (function () {
         // 创建编号
         let num = new cc.Node();
         num.parent = node;
-        num.y = 20
+        num.y = 20;
         num.addComponent(cc.Label).string = count
         return node
     }
+
     let getRandPos = function () {
-        // let screenSize = cc.view.getVisibleSize();
-        let screenSize = cc.view.getDesignResolutionSize();
-        let randX = Math.random() * screenSize.width - screenSize.width * 0.5;
-        let randY = Math.random() * screenSize.height - screenSize.height * 0.5;
+        let randX = Math.random() * resolution.width - resolution.width * 0.5;
+        let randY = Math.random() * resolution.height - resolution.height * 0.5;
         return cc.v2(randX, randY)
     }
     // 初始化一个随机曲线
@@ -252,7 +284,7 @@ let BezierData = (function () {
             pointCurveDict.delete(point);
             // 删除后曲线相关的信息
             for (const key in nextCurve) {
-                if(key == "end") continue;
+                if (key == "end") continue;
                 const _point = nextCurve[key];
                 pointCurveDict.delete(_point)
                 _point.destroy();
@@ -277,7 +309,7 @@ let BezierData = (function () {
             let endCurveObj = pointCurveDict.get(startCurve.end);
             endCurveObj.endCurve = null;
             for (const key in startCurve) {
-                if(key == "end") continue;
+                if (key == "end") continue;
                 const _point = startCurve[key];
                 pointCurveDict.delete(_point)
                 _point.destroy();
@@ -296,7 +328,7 @@ let BezierData = (function () {
             let startCurveObj = pointCurveDict.get(endCurve.start);
             startCurveObj.startCurve = null;
             for (const key in endCurve) {
-                if(key == "start") continue;
+                if (key == "start") continue;
                 const _point = endCurve[key];
                 pointCurveDict.delete(_point)
                 _point.destroy();

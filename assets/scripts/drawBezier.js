@@ -20,11 +20,12 @@ cc.Class({
         bezierColor: new cc.Color(255, 0, 0),// 贝塞尔曲线颜色
         lineColor: new cc.Color(0, 255, 255),//控制线段
         infoWindow: cc.Node,
-        // runTime: cc.EditBox,
+        paper: cc.Node,
         msg: cc.Node,
         timeInfo: cc.Label,//实时运行时间
         deleteBtn: cc.Node,//删除按钮
         mouseLocation: cc.Label,//鼠标坐标
+
     },
 
     onLoad() {
@@ -40,13 +41,22 @@ cc.Class({
         this.infoWindow.zIndex = 10;
         this.notice = this.infoWindow.getChildByName("notice").getComponent(cc.Label);
         this.fileInputBox = this.infoWindow.getChildByName("Input").getChildByName("fileEditBox").getComponent(cc.EditBox);
-        this.moveBtn = this.node.getChildByName("controlPanel").getChildByName("moveBtn");
-        this.smoothnessInputBox = this.node.getChildByName("controlPanel").getChildByName("smoothnessInput").getChildByName("EditBox").getComponent(cc.EditBox);
-        this.runTimeInputBox = this.node.getChildByName("controlPanel").getChildByName("runTimeInput").getChildByName("EditBox").getComponent(cc.EditBox);
+        // 控制器面板
+        let controlPanel = this.node.getChildByName("controlPanel");
+        this.moveBtn = controlPanel.getChildByName("moveBtn");
+        this.smoothnessInputBox = controlPanel.getChildByName("smoothnessInput").getChildByName("EditBox").getComponent(cc.EditBox);
+        this.runTimeInputBox = controlPanel.getChildByName("runTimeInput").getChildByName("EditBox").getComponent(cc.EditBox);
+
+        this.resolutionWidthInputBox = controlPanel.getChildByName("resolution").getChildByName("width").getComponent(cc.EditBox);
+        this.resolutionHeightInputBox = controlPanel.getChildByName("resolution").getChildByName("height").getComponent(cc.EditBox);
+
+        // 初始化Graphics
         this.initGraphics();
         this.initNodeEvents();
         this.hideInfoWindow();
         this.addDeleteBtnEvents();
+        this.initResolution();
+        // 初始化贝塞尔曲线数据
         lcl.BezierData.init(this.point, this.control, this.node);
         lcl.BezierData.setBezierCurveRunTime(Number(this.runTimeInputBox.string));
         lcl.BezierData.saveBezierPath();
@@ -59,32 +69,43 @@ cc.Class({
             this.setCountTimeLabel(dt);
         }
     },
+
+    // 初始化绘制区域
+    initResolution(){
+        this.resolution = lcl.BezierData.getResolution();
+        this.resolutionWidthInputBox.string = this.resolution.width;
+        this.resolutionHeightInputBox.string = this.resolution.height;
+        this.setPaperSize();
+    },
     // 初始化Graphics
     initGraphics() {
         this.ctx = this.graphicsNode.getComponent(cc.Graphics);
         this.ctx.lineWidth = 2;
     },
 
-    getRandPos() {
-        // let screenSize = cc.view.getVisibleSize();
-        let screenSize = cc.view.getDesignResolutionSize();
-        let randX = Math.random() * screenSize.width - screenSize.width * 0.5;
-        let randY = Math.random() * screenSize.height - screenSize.height * 0.5;
-        return cc.v2(randX, randY)
-    },
-    // 初始化一个随机曲线
-    initRandCurve() {
-        let start = this.createPoint(lcl.Ident.point, this.getRandPos());
-        let control = this.createPoint(lcl.Ident.control, this.getRandPos());
-        let end = this.createPoint(lcl.Ident.point, this.getRandPos());
-        let bezier = { start, control, end }
-        lcl.BezierData.addBezierCurve(bezier);
-        lcl.BezierData.saveToPointCurveDict(bezier);
-    },
+    // getRandPos() {
+    //     // let screenSize = cc.view.getVisibleSize();
+    //     // let screenSize = cc.view.getDesignResolutionSize();
+
+    //     let randX = Math.random() * this.resolution.width - this.resolution.width * 0.5;
+    //     let randY = Math.random() * this.resolution.height - this.resolution.height * 0.5;
+    //     return cc.v2(randX, randY)
+    // },
+    // // 初始化一个随机曲线
+    // initRandCurve() {
+    //     let start = this.createPoint(lcl.Ident.point, this.getRandPos());
+    //     let control = this.createPoint(lcl.Ident.control, this.getRandPos());
+    //     let end = this.createPoint(lcl.Ident.point, this.getRandPos());
+    //     let bezier = { start, control, end }
+    //     lcl.BezierData.addBezierCurve(bezier);
+    //     lcl.BezierData.saveToPointCurveDict(bezier);
+    // },
     // 
     initNodeEvents() {
         lcl.NodeEvents.addCanvasTouchEvents();
         // 
+        this.box.ident = lcl.Ident.window;
+        this.moveBtn.ident = lcl.Ident.window;
         lcl.NodeEvents.addDragEvents(this.box)
         // 可移动的窗体
         lcl.NodeEvents.addDragEvents(this.moveBtn, this.moveBtn.parent);
@@ -99,9 +120,11 @@ cc.Class({
         for (var i = 0, len = bezierLists.length; i < len; i++) {
             const curve = bezierLists[i];
             let n = Object.keys(curve).length;
+            // 绘制二阶贝塞尔
             if (n == 3) {
                 this.drawBezier(curve.start.position, curve.control.position, curve.end.position);
             }
+            // 绘制三阶贝塞尔
             if (n == 4) {
                 this.drawThirdOrderBezier(curve);
             }
@@ -254,6 +277,24 @@ cc.Class({
     //     }
     //     return true
     // },
+    // 设置分辨率
+    setResolution(str, event, ident) {
+        console.log(str, event, ident);
+        let num = Number(str);
+        if (str == "" || isNaN(num)) {
+            this.showMsg("分辨率只能填写数字！！！");
+            event.string = this.resolution[ident];
+            return
+        }
+        this.resolution[ident] = num;
+        lcl.BezierData.setResolution(this.resolution.width, this.resolution.height);
+        this.setPaperSize();
+        lcl.BezierData.init(this.point, this.control, this.node);
+    },
+    setPaperSize(){
+        this.paper.width = this.resolution.width;
+        this.paper.height = this.resolution.height;
+    },
     // 设置运行时间
     setRunTime(str) {
         let num = Number(str);
@@ -265,7 +306,7 @@ cc.Class({
         this.prveRunTime = num;
         lcl.BezierData.setBezierCurveRunTime(num);
     },
-    
+
     // 设置曲线平滑度
     setCurveSmoothness(str) {
         console.log(str);
@@ -275,7 +316,7 @@ cc.Class({
             this.smoothnessInputBox.string = this.prvePointCount || 100;
             return
         }
-        if (num < 0 || num >1000) {
+        if (num < 0 || num > 1000) {
             this.showMsg("曲线平滑度取值范围在 0 - 1000！");
             this.smoothnessInputBox.string = this.prvePointCount || 100;
             return
@@ -350,7 +391,7 @@ cc.Class({
     },
 
     // 曲线类型选择
-    setCurveType(event){
+    setCurveType(event) {
         console.log(event);
         lcl.BezierData.setBezierCurveType(event.node._name)
     }

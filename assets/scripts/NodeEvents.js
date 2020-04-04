@@ -3,7 +3,6 @@ let NodeEvents = (function () {
     //移动目标节点
     let moveTargetNode = null;
     let isMouseDown = null;
-    let canvasNode = null;
     let isOperate = true;
 
     // 屏幕坐标转换到节点坐标
@@ -15,7 +14,16 @@ let NodeEvents = (function () {
     function isDelete(node) {
         return node.ident == lcl.Ident.point;
     }
-  
+    // 是否在绘制区域
+    function atDrawingArea(pos) {
+        let resolution = lcl.BezierData.getResolution();
+        let halfW = resolution.width / 2;
+        let halfH = resolution.height / 2;
+
+        return pos.x > -halfW && pos.x < halfW &&
+            pos.y > -halfH && pos.y < halfH
+    }
+
     // // 是否能移动
     // function isMove(node) {
     //     return node.ident == lcl.Ident.point || node.ident == lcl.Ident.control || node.ident == lcl.Ident.window;
@@ -43,12 +51,17 @@ let NodeEvents = (function () {
         // 鼠标移动
         node.on(cc.Node.EventType.MOUSE_MOVE, (event) => {
             // target = event.target;
+            console.log(event.target.ident);
+
             target.opacity = 100;
             cc.game.canvas.style.cursor = "all-scroll";
             //鼠标按下并且有指定目标节点
             if (isMouseDown && moveTargetNode) {
                 //把屏幕坐标转换到节点坐标下
                 let mousePos = convertToNodeSpace(event);
+                // 判断拖拽的是否是控制点
+                if (!atDrawingArea(mousePos) && (event.target.ident == lcl.Ident.point || event.target.ident == lcl.Ident.control))
+                    return
                 moveTargetNode.setPosition(mousePos);
             }
         });
@@ -56,7 +69,11 @@ let NodeEvents = (function () {
         node.on(cc.Node.EventType.MOUSE_LEAVE, (event) => {
             // target = event.target;
             target.opacity = 255;
-            cc.game.canvas.style.cursor = "auto"
+            cc.game.canvas.style.cursor = "auto";
+            if (isMouseDown && moveTargetNode) {
+                let mousePos = convertToNodeSpace(event);
+                moveTargetNode.setPosition(mousePos);
+            }
         });
         // 鼠标抬起
         node.on(cc.Node.EventType.MOUSE_UP, (event) => {
@@ -89,23 +106,22 @@ let NodeEvents = (function () {
     }
 
     // 添加Canvas节点事件
-    _this.addCanvasTouchEvents = function (node) {
-        let canvasNode = cc.find("Canvas");
+    _this.addCanvasTouchEvents = function (canvasNode = cc.find("Canvas")) {
         let target;
         // 鼠标按下
         canvasNode.on(cc.Node.EventType.MOUSE_DOWN, (event) => {
+
             // 鼠标左键
             if (event.getButton() == cc.Event.EventMouse.BUTTON_LEFT) {
                 event.stopPropagation();
                 target = event.target;
                 //创建坐标点,需要先把屏幕坐标转换到节点坐标下
                 let mousePos = convertToNodeSpace(event);
-                if (!isOperate) {
-                    lcl.Events.emit("hideDeleteBtn"); 
-                    // console.log(target)
+                if (!atDrawingArea(mousePos))
                     return
-                }
-                console.log(lcl.BezierData);
+                if (!isOperate)
+                    lcl.Events.emit("hideDeleteBtn");
+
                 // 二阶
                 if (lcl.BezierData.getBezierCurveType() == lcl.BezierCurveType.SecondOrder) {
                     lcl.BezierData.createCurve(mousePos);
@@ -122,6 +138,8 @@ let NodeEvents = (function () {
             target = event.target;
             //创建坐标点,需要先把屏幕坐标转换到节点坐标下
             let mousePos = convertToNodeSpace(event);
+            if (!atDrawingArea(mousePos))
+                return
             lcl.Events.emit("setMouseLocation", mousePos);
             //鼠标按下并且有指定目标节点
             if (isMouseDown && moveTargetNode) {
