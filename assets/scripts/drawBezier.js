@@ -83,29 +83,13 @@ cc.Class({
         this.ctx.lineWidth = 2;
     },
 
-    // getRandPos() {
-    //     // let screenSize = cc.view.getVisibleSize();
-    //     // let screenSize = cc.view.getDesignResolutionSize();
-
-    //     let randX = Math.random() * this.resolution.width - this.resolution.width * 0.5;
-    //     let randY = Math.random() * this.resolution.height - this.resolution.height * 0.5;
-    //     return cc.v2(randX, randY)
-    // },
-    // // 初始化一个随机曲线
-    // initRandCurve() {
-    //     let start = this.createPoint(lcl.Ident.point, this.getRandPos());
-    //     let control = this.createPoint(lcl.Ident.control, this.getRandPos());
-    //     let end = this.createPoint(lcl.Ident.point, this.getRandPos());
-    //     let bezier = { start, control, end }
-    //     lcl.BezierData.addBezierCurve(bezier);
-    //     lcl.BezierData.saveToPointCurveDict(bezier);
-    // },
-    // 
+    
     initNodeEvents() {
         lcl.NodeEvents.addCanvasTouchEvents();
         // 
         this.box.ident = lcl.Ident.window;
         this.moveBtn.ident = lcl.Ident.window;
+        this.moveBtn.parent.ident = lcl.Ident.window;
         lcl.NodeEvents.addDragEvents(this.box)
         // 可移动的窗体
         lcl.NodeEvents.addDragEvents(this.moveBtn, this.moveBtn.parent);
