@@ -1,5 +1,5 @@
 window.lcl = {};
-window.lcl.Bezier = require('./bezier');
+window.lcl.Bezier = require('./Bezier');
 window.lcl.BezierData = require('./BezierData');
 window.lcl.NodeEvents = require('./NodeEvents');
 window.lcl.Events = require('./EventListener');
