@@ -31,8 +31,8 @@ let BezierData = (function () {
 
     // 画板分辨率
     let resolution = {
-        width: 1920,
-        height: 1080
+        width: 1280,
+        height: 720
     }
 
 
