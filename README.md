@@ -11,7 +11,7 @@
 **该工程基于cocos creator 2.2.2版本!**   
 
 
-[在线演示地址](https://csdjk.github.io/bezierPathCreater.github.io/)(可以直接在上面规划好后导出json文件)
+[在线演示地址](https://lichanglonggitee.gitee.io/bezierpathcreater.github.io/)(可以直接在上面规划好后导出json文件)
 
 **下面来简单演示一下该工程：**    
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/2020021015460710.gif)
